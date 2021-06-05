@@ -25,12 +25,15 @@ class RegRefQualityMetricsWidget(Widget):
         super().__init__()
         self.title = title
 
+    def analyzers(self):
+        return []
+
     def get_info(self) -> BaseWidgetInfo:
         if self.wi:
             return self.wi
         raise ValueError("No reference data with target and prediction provided")
 
-    def calculate(self, reference_data: pd.DataFrame, production_data: pd.DataFrame, column_mapping): 
+    def calculate(self, reference_data: pd.DataFrame, production_data: pd.DataFrame, column_mapping, analyzes_results):
         if column_mapping:
             date_column = column_mapping.get('datetime')
             id_column = column_mapping.get('id')
@@ -66,23 +69,14 @@ class RegRefQualityMetricsWidget(Widget):
             #calculate quality metrics
             me = np.mean(reference_data[prediction_column] - reference_data[target_column])
             sde = np.std(reference_data[prediction_column] - reference_data[target_column], ddof = 1)
-
-            abs_err = list(map(lambda x : abs(x[0] - x[1]), 
-                zip(reference_data[target_column], reference_data[prediction_column])))
+            
+            abs_err = np.abs(reference_data[prediction_column] - reference_data[target_column])
             mae = np.mean(abs_err)
             sdae = np.std(abs_err, ddof = 1)
 
-            abs_perc_err = list(map(lambda x : 100*abs(x[0] - x[1])/x[0], 
-                zip(reference_data[target_column], reference_data[prediction_column])))
+            abs_perc_err = 100.*np.abs(reference_data[prediction_column] - reference_data[target_column])/reference_data[target_column]
             mape = np.mean(abs_perc_err)
             sdape = np.std(abs_perc_err, ddof = 1)
-
-            #sqrt_err = list(map(lambda x : (x[0] - x[1])**2, 
-            #    zip(reference_data[target_column], reference_data[prediction_column])))
-            #mse = np.mean(sqrt_err)
-            #sdse = np.std(sqrt_err, ddof = 1)
-
-            #error_norm_json = json.loads(error_norm.to_json())
 
             self.wi = BaseWidgetInfo(
                 title="Reference: Model Quality (+/- std)",

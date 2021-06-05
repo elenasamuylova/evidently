@@ -24,12 +24,15 @@ class ProbClassRefMetricsMatrixWidget(Widget):
         super().__init__()
         self.title = title
 
+    def analyzers(self):
+        return []
+
     def get_info(self) -> BaseWidgetInfo:
         if self.wi:
             return self.wi
         raise ValueError("No prediction or target data provided")
 
-    def calculate(self, reference_data: pd.DataFrame, production_data: pd.DataFrame, column_mapping): 
+    def calculate(self, reference_data: pd.DataFrame, production_data: pd.DataFrame, column_mapping, analyzes_results):
         if column_mapping:
             date_column = column_mapping.get('datetime')
             id_column = column_mapping.get('id')
@@ -73,6 +76,8 @@ class ProbClassRefMetricsMatrixWidget(Widget):
 
             prediction_ids = np.argmax(array_prediction, axis=-1)
             prediction_labels = [prediction_column[x] for x in prediction_ids]
+
+            labels = sorted(set(reference_data[target_column]))
             
             #plot support bar
             metrics_matrix = metrics.classification_report(reference_data[target_column], prediction_labels,
@@ -80,7 +85,7 @@ class ProbClassRefMetricsMatrixWidget(Widget):
             metrics_frame = pd.DataFrame(metrics_matrix)
 
             z = metrics_frame.iloc[:-1,:-3].values
-            x = prediction_column
+            x = labels 
             y =  ['precision', 'recall', 'f1-score']
 
             if len(prediction_column) > 2:

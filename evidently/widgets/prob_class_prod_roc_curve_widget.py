@@ -24,12 +24,15 @@ class ProbClassProdRocCurveWidget(Widget):
         super().__init__()
         self.title = title
 
+    def analyzers(self):
+        return []
+
     def get_info(self) -> BaseWidgetInfo:
         #if self.wi:
         return self.wi
         #raise ValueError("No prediction or target data provided")
 
-    def calculate(self, reference_data: pd.DataFrame, production_data: pd.DataFrame, column_mapping): 
+    def calculate(self, reference_data: pd.DataFrame, production_data: pd.DataFrame, column_mapping, analyzes_results):
         if column_mapping:
             date_column = column_mapping.get('datetime')
             id_column = column_mapping.get('id')
@@ -71,7 +74,7 @@ class ProbClassProdRocCurveWidget(Widget):
                 binaraized_target = pd.DataFrame(binaraizer.transform(production_data[target_column]))
                 binaraized_target.columns = ['target']
 
-                fpr, tpr, thrs = metrics.roc_curve(binaraized_target, production_data[prediction_column[0]])
+                fpr, tpr, thrs = metrics.roc_curve(binaraized_target, production_data[prediction_column[0]]) #problem!!!
                 fig = go.Figure()
 
                 fig.add_trace(go.Scatter(
