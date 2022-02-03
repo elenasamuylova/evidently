@@ -18,7 +18,7 @@ You can specify the following parameters:
   * Data used for metric calculation doesn't change. &#x20;
   * Applies to all features (if passed as _tuple_) or certain features (if passed as _dictionary_).
 
-### How to define Data/Target Drift options
+### How to define Quality Metrics Options
 
 1\. Define a **QualityMetricsOptions** object.
 
