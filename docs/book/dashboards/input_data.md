@@ -80,3 +80,14 @@ Make sure the data complies with the following expectations.
 
 * **All non-numerical columns will be ignored**. Categorical data can be encoded as numerical labels and specified in the column mapping. 
 * **The datetime column is the only exception.** If available, it will be used as the x-axis in the data plots.
+
+## New features or feature values in the current dataset
+
+Evidently expects that both datasets have the same structure. 
+
+If you have new features or feature values, here is how Evidently handles it on the example of Data Drift report.
+* If your current dataset has **missing features** (available in reference, but not available in the current dataset), Evidently will return an ERROR.
+* If your current dataset has **new features**, Evidently will generate the report, ignoring these new features. There is no in-built alert about new features.  
+* If your current dataset has **new values** for certain **categorical** features, Evidently will take this into account when running the statistical tests, and will generate the report. You will be able to see new categories for the existing features on the distribution plots. However, there is no explicit alert about new feature values.
+
+**Tip**: if you know that some features might be missing in production, you can explicitly exclude them using column_mapping and only generate the report for features that you expect to be present.
