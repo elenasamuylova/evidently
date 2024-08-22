@@ -160,7 +160,7 @@ report = Report(metrics=[
 | `uncertainty`      | Category to return when the provided information is not sufficient to make a clear determination. Available: `unknown` (Default), `target`, `non_target`.
 | `include_reasoning`| Specifies whether to include reasoning in the classification. Available: `True` (Default), `False`. It will be included with the result. |
 | `pre_messages`     | List of system messages that set context or instructions before the evaluation task. For example, you can explain the evaluator role ("you are an expert..") or context ("your goal is to grade the work of an intern..") |
-| `additional_columns`| A dictionary of additional columns present in your dataset that will be included and referenced in the evaluation prompt. Use it to map the name of your columns to the names that you will reference as placeholders in the evaluation prompt. For example: `({"mycol": "question"}`. |
+| `additional_columns`| A dictionary of additional columns present in your dataset to include in the evaluation prompt. Use it to map the column name to the placeholder name you reference in the `criteria`. For example: `({"mycol": "question"}`. |
 
 # OpenAIPrompting
 
