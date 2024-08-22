@@ -8,7 +8,7 @@ description: How to use external LLMs to score text data.
 
 You can use external LLMs to score your text data. This method lets you evaluate texts based on any custom criteria that you define in a prompt.
 
-The LLM “judge” must return a numerical score or a category for each text in a column. You will then be able to view scores, analyze their distribution or run conditional tests through the usual Descriptor interface.
+The LLM “judge” will return a numerical score or a category for each text in a column. You will then be able to view indiviudal and summary scores, analyze their distribution, run conditional tests through the usual Descriptor interface, and monitor evaluation results in time.
 
 Evidently currently supports scoring data using Open AI LLMs (more LLMs coming soon). Use the `LLMEval` descriptor to define your prompt and criteria, or one of the built-in evaluators.
 
@@ -21,20 +21,20 @@ You can refer to a How-to example with different LLM judges:
 {% embed url="https://github.com/evidentlyai/evidently/blob/main/examples/how_to_questions/how_to_use_llm_judge_template.ipynb" %}
 
 {% hint style="info" %}
-**OpenAI key.** Add the OpenAI token as the environment variable: [see docs](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety). You will incur costs when running this eval.
+**OpenAI key.** Add the token as the environment variable: [see docs](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety). You will incur costs when running this eval.
 {% endhint %}
 
-## Built-in templates
+## Built-in evaluators
 
-You can use built-in evaluation templates. They default to returning a binary category label with reasoning and using `gpt-4o-mini` model from OpenAI.
+You can use built-in evaluators that include pre-written prompts for specific criteria. These descriptors default to returning a binary category label with reasoning and using `gpt-4o-mini` model from OpenAI.
 
-Imports:
+**Imports**. Import the `LLMEval` and built-in evaluators you want to use:
 
 ```python
 from evidently.descriptors import LLMEval, NegativityLLMEval, PIILLMEval, DeclineLLMEval
 ```
 
-To create a Report with these descriptors, simply list them:
+**Get a Report**. To create a Report, simply list the them like any other descriptor:
 
 ```python
 report = Report(metrics=[
@@ -46,7 +46,7 @@ report = Report(metrics=[
 ])
 ```
 
-You can also use parameters to modify the output to switch from `category` to `score` (0 to 1) in the output or to exclude the reasoning:
+**Parametrize evaluators**. You can use parameters to modify the output to switch from `category` to `score` (0 to 1) in the output or to exclude the reasoning:
 
 ```python
 report = Report(metrics=[
@@ -64,14 +64,15 @@ report = Report(metrics=[
 
 ## Custom LLM judge
 
-You can also create a custom LLM judge using the provided templates. You can specify the parameters, and Evidently will automatically generate the complete evaluation prompt to send to the LLM together with the evaluation data.
+You can also create a custom LLM judge using the provided templates. You can specify the parameters and evaluation criteria, and Evidently will generate the complete evaluation prompt to send to the LLM together with the evaluation data.
 
-Imports:
+**Imports**. To import the template for Binary Classification evaluator prompt:
+
 ```python
 from evidently.features.llm_judge import BinaryClassificationPromptTemplate
 ```
 
-**Binary Classification template**. Example of defining a "conciseness" prompt:
+**Fill in the template**. To define the prompt for "conciseness" evaluation:
 
 ```python
 custom_judge = LLMEval(
@@ -94,6 +95,46 @@ custom_judge = LLMEval(
 )
 ```
 
+**Using text from multiple columns**. You can use this template to run evals that use data from multiple columns. For example, you can evaluate the output in the `response` column, while simultaneously including data from the `context` or `question` column in the evaluation prompt. This is useful, for example, to judge the relevance of the response.
+
+To create such evaluator, pass the names of the `additional_columns` in your dataset, and include the reference to it directly in the gradient criteria. When running the eval, the contents of each text in the corresponding column will be iteratively included in the prompt.
+
+```python
+multi_column_judge = LLMEval(
+        subcolumn="category",
+        additional_columns={"question": "question"},
+        template=BinaryClassificationPromptTemplate(
+            criteria=""""Relevance" refers to the response directly addresses the question and effectively meets the user's intent.  
+Relevant answer is an answer that directly addresses the question and effectively meets the user's intent.
+
+=====
+{question}
+=====
+            """,
+            target_category="Relevant",
+            non_target_category="Irrelevant",
+            include_reasoning=True,
+            pre_messages=[("system",
+                           "You are an expert evaluator assessing the quality of a Q&A system. Your goal is to determine if the provided answer is relevant to the question based on the criteria below.")],
+        ),
+        provider="openai",
+        model="gpt-4o-mini",
+        display_name="Relevancy"
+    )
+```
+
+Note: you reference the primary column you are evaluating as the `column_name` in the `TextEvals` preset. Inclusion of the contents of this column in the evaluator prompt is already part of the template. 
+
+```
+report = Report(metrics=[
+    TextEvals(column_name="response", descriptors=[
+        multi_column_judge
+    ])
+])
+```
+
+## Parameters
+
 ### LLMEval Parameters
 
 | Parameter    | Description                                                      |
@@ -109,9 +150,9 @@ custom_judge = LLMEval(
 |--------------------|-------------------------------------------------------------------------------------------------------------------------|
 | `criteria`         | Free-form text defining evaluation criteria.                       |
 | `target_category`  | Name of the desired or positive category.                                                             |
-| `non_target_category` | Name of the undesired or negative category.                                                           |
-| `uncertainty`      | Name of the category to return when the provided information is not sufficient to make a clear determination            |
-| `include_reasoning`| Specifies whether to include reasoning in the classification. Available: `True`, `False`. It will be included with the result. |
+| `non_target_category` | Name of the undesired or negative category.                                                          |
+| `uncertainty`      | Category to return when the provided information is not sufficient to make a clear determination. Available: `unknown` (Default), `target`, `non_target`.
+| `include_reasoning`| Specifies whether to include reasoning in the classification. Available: `True` (Default), `False`. It will be included with the result. |
 | `pre_messages`     | List of system messages that set context or instructions before the evaluation task. For example, you can explain the evaluator role ("you are an expert..") or context ("your goal is to grade the work of an intern.." |
 
 
