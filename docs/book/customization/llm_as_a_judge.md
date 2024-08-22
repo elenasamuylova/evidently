@@ -159,7 +159,7 @@ report = Report(metrics=[
 | `non_target_category` | Name of the undesired or negative category.                                                          |
 | `uncertainty`      | Category to return when the provided information is not sufficient to make a clear determination. Available: `unknown` (Default), `target`, `non_target`.
 | `include_reasoning`| Specifies whether to include reasoning in the classification. Available: `True` (Default), `False`. It will be included with the result. |
-| `pre_messages`     | List of system messages that set context or instructions before the evaluation task. For example, you can explain the evaluator role ("you are an expert..") or context ("your goal is to grade the work of an intern.." |
+| `pre_messages`     | List of system messages that set context or instructions before the evaluation task. For example, you can explain the evaluator role ("you are an expert..") or context ("your goal is to grade the work of an intern..") |
 
 
 # OpenAIPrompting
