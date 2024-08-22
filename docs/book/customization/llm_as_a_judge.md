@@ -6,17 +6,17 @@ description: How to use external LLMs to score text data.
 * You know how to pass custom parameters for Reports or Test Suites.
 * You know how to specify text data in column mapping.
 
-You can use external LLMs to score your text data. This method lets you evaluate texts based on any custom criteria that you define in a prompt.
+You can use external LLMs to score your text data. This method lets you evaluate texts by any custom criteria you define in a prompt.
 
-The LLM “judge” will return a numerical score or a category for each text in a column. You will then be able to view indiviudal and summary scores, analyze their distribution, run conditional tests through the usual Descriptor interface, and monitor evaluation results in time.
+The LLM “judge” will return a numerical score or a category for each text in a column. It works like any other Evidently `descriptor`: you can view and analyze scores, run conditional Tests, and monitor evaluation results in time.
 
-Evidently currently supports scoring data using Open AI LLMs (more LLMs coming soon). Use the `LLMEval` descriptor to define your prompt and criteria, or one of the built-in evaluators.
+Evidently currently supports scoring data using Open AI LLMs (more LLMs coming soon). Use the `LLMEval` descriptor to create an evaluator with any custom criteria, or choose any of the built-in evaluators (like detection of Denials, Personally identifiable information, etc.).
 
 # LLM Eval
 
 ## Code example
 
-You can refer to a How-to example with different LLM judges:
+Refer to a How-to example:
 
 {% embed url="https://github.com/evidentlyai/evidently/blob/main/examples/how_to_questions/how_to_use_llm_judge_template.ipynb" %}
 
@@ -34,7 +34,7 @@ You can use built-in evaluators that include pre-written prompts for specific cr
 from evidently.descriptors import LLMEval, NegativityLLMEval, PIILLMEval, DeclineLLMEval
 ```
 
-**Get a Report**. To create a Report, simply list the them like any other descriptor:
+**Get a Report**. To create a Report, simply list them like any other descriptor:
 
 ```python
 report = Report(metrics=[
@@ -46,7 +46,7 @@ report = Report(metrics=[
 ])
 ```
 
-**Parametrize evaluators**. You can use parameters to modify the output to switch from `category` to `score` (0 to 1) in the output or to exclude the reasoning:
+**Parametrize evaluators**. You can switch the output format from `category` to `score` (0 to 1) or exclude the reasoning:
 
 ```python
 report = Report(metrics=[
@@ -64,15 +64,15 @@ report = Report(metrics=[
 
 ## Custom LLM judge
 
-You can also create a custom LLM judge using the provided templates. You can specify the parameters and evaluation criteria, and Evidently will generate the complete evaluation prompt to send to the LLM together with the evaluation data.
+You can also create a custom LLM evaluator using the provided templates. You specify the parameters and evaluation criteria, and Evidently will generate the complete evaluation prompt to send to the LLM together with the evaluation data.
 
-**Imports**. To import the template for Binary Classification evaluator prompt:
+**Imports**. To import the template for the Binary Classification evaluator prompt:
 
 ```python
 from evidently.features.llm_judge import BinaryClassificationPromptTemplate
 ```
 
-**Fill in the template**. To define the prompt for "conciseness" evaluation:
+**Fill in the template**. Include the definition of your `criteria`, names of categories, etc. For example, to define the prompt for "conciseness" evaluation:
 
 ```python
 custom_judge = LLMEval(
@@ -95,9 +95,15 @@ custom_judge = LLMEval(
 )
 ```
 
-**Using text from multiple columns**. You can use this template to run evals that use data from multiple columns. For example, you can evaluate the output in the `response` column, while simultaneously including data from the `context` or `question` column in the evaluation prompt. This is useful, for example, to judge the relevance of the response.
+See the explanation of each parameter below.
 
-To create such evaluator, pass the names of the `additional_columns` in your dataset, and include the reference to it directly in the gradient criteria. When running the eval, the contents of each text in the corresponding column will be iteratively included in the prompt.
+You do not need to explicitly ask the LLM to classify your input into two classes, ask for reasoning, or format it specially. This is already part of the template.
+
+**Using text from multiple columns**. You can use this template to run evals that use data from multiple columns. 
+
+For example, you can evaluate the output in the `response` column, simultaneously including data from the `context` or `question` column. This applies to scenarios like classifying the relevance of the response in relation to the question or its factuality based on context, etc.
+
+Pass the names of the `additional_columns` in your dataset and reference the `{column}` when you write the `criteria`. When you run the eval, Evidently will insert the contents of each text in the corresponding column in the evaluation prompt.
 
 ```python
 multi_column_judge = LLMEval(
@@ -123,7 +129,7 @@ Relevant answer is an answer that directly addresses the question and effectivel
     )
 ```
 
-Note: you reference the primary column you are evaluating as the `column_name` in the `TextEvals` preset. Inclusion of the contents of this column in the evaluator prompt is already part of the template. 
+You do not need to explicitly include the name of your primary column in the evaluation prompt. Since you include it as `column_name` in the `TextEvals` preset, it will be automatically passed to the template. 
 
 ```
 report = Report(metrics=[
